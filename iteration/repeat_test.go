@@ -1,6 +1,9 @@
 package iteration
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestRepeating(t *testing.T) {
 	t.Run("repeat a, 5 times", func(t *testing.T) {
@@ -25,4 +28,10 @@ func BenchmarkRepeat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Repeat("a", 3)
 	}
+}
+
+func ExampleRepeat() {
+	result := Repeat("b", 3)
+	fmt.Println(result)
+	// Output: bbb
 }
