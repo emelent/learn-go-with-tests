@@ -2,6 +2,7 @@ package iteration
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -34,4 +35,13 @@ func ExampleRepeat() {
 	result := Repeat("b", 3)
 	fmt.Println(result)
 	// Output: bbb
+}
+
+func TestStringsRepeat(t *testing.T) {
+	actual := strings.Repeat("b", 3)
+	expected := "bbb"
+
+	if actual != expected {
+		t.Errorf("expected %q but got %q", expected, actual)
+	}
 }
