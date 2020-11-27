@@ -7,3 +7,11 @@ func Sum(numbers []int) int {
 	}
 	return sum
 }
+
+func SumAll(sets ...[]int) int {
+	sum := 0
+	for _, set := range sets {
+		sum += Sum(set)
+	}
+	return sum
+}
