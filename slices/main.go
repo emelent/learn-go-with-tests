@@ -19,9 +19,19 @@ func SumAll2(sets ...[]int) int {
 }
 
 // SumAll returns a slice containing the individual sums of a set of slices
-func SumAll(sets ...[]int) (sums []int) {
-	for _, set := range sets {
-		sums = append(sums, Sum(set))
+func SumAll(numbersToSum ...[]int) []int {
+	lengthOfNumbers := len(numbersToSum)
+	sums := make([]int, lengthOfNumbers)
+
+	for i, numbers := range numbersToSum {
+		sums[i] = Sum(numbers)
 	}
-	return
+	return sums
 }
+
+// func SumAll(sets ...[]int) (sums []int) {
+// for _, set := range sets {
+// sums = append(sums, Sum(set))
+// }
+// return
+// }
