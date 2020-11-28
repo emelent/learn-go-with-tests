@@ -28,7 +28,11 @@ func SumAll(sets ...[]int) (sums []int) {
 
 func SumAllTails(sets ...[]int) (sums []int) {
 	for _, set := range sets {
-		sums = append(sums, Sum(set[1:]))
+		if len(set) == 0 {
+			sums = append(sums, 0)
+		} else {
+			sums = append(sums, Sum(set[1:]))
+		}
 	}
 	return
 }
