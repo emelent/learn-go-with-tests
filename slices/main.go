@@ -25,3 +25,10 @@ func SumAll(sets ...[]int) (sums []int) {
 	}
 	return
 }
+
+func SumAllTails(sets ...[]int) (sums []int) {
+	for _, set := range sets {
+		sums = append(sums, Sum(set[1:]))
+	}
+	return
+}
