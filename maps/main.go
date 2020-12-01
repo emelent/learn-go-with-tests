@@ -1,9 +1,9 @@
 package main
 
 const (
-	ErrNotFound      = DictionaryErr("word not found")
-	ErrWordExists    = DictionaryErr("word exists")
-	ErrNotWordExists = DictionaryErr("word exists")
+	ErrNotFound         = DictionaryErr("word not found")
+	ErrWordExists       = DictionaryErr("word exists")
+	ErrWordDoesNotExist = DictionaryErr("word exists")
 )
 
 type DictionaryErr string
@@ -42,7 +42,7 @@ func (d Dictionary) Update(word, definition string) error {
 
 	switch err {
 	case ErrNotFound:
-		return ErrNotWordExists
+		return ErrWordDoesNotExist
 	case nil:
 		d[word] = definition
 	default:
