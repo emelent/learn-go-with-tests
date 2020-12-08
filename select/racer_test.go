@@ -10,22 +10,38 @@ import (
 const slowServerDelay = 20
 const fastServerDelay = 0
 
-func TestParallelRacer(t *testing.T) {
-	slowServer := makeDelayedServer(slowServerDelay * time.Millisecond)
-	fastServer := makeDelayedServer(fastServerDelay * time.Millisecond)
+func TestRacer(t *testing.T) {
+	t.Run("resturns fastest url", func(t *testing.T) {
+		slowServer := makeDelayedServer(slowServerDelay * time.Millisecond)
+		fastServer := makeDelayedServer(fastServerDelay * time.Millisecond)
 
-	slowURL := slowServer.URL
-	fastURL := fastServer.URL
+		slowURL := slowServer.URL
+		fastURL := fastServer.URL
 
-	want := fastURL
-	got := ParallelRacer(slowURL, fastURL)
+		want := fastURL
+		got, _ := Racer(slowURL, fastURL)
 
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
 
-	slowServer.Close()
-	fastServer.Close()
+		slowServer.Close()
+		fastServer.Close()
+	})
+
+	t.Run("returns an error if a server doesn't respond within 10s", func(t *testing.T) {
+		serverA := makeDelayedServer(11 * time.Second)
+		serverB := makeDelayedServer(12 * time.Second)
+
+		defer serverA.Close()
+		defer serverB.Close()
+
+		_, err := Racer(serverA.URL, serverB.URL)
+
+		if err == nil {
+			t.Error("expected an error but didn't get one")
+		}
+	})
 }
 
 func BenchmarkSequentialRacer(b *testing.B) {
