@@ -5,13 +5,6 @@ import (
 	"testing"
 )
 
-type person struct {
-	firstName  string
-	lastName   string
-	age        int
-	occupation string
-}
-
 type walkSpy struct {
 	fields map[string]interface{}
 }
@@ -21,19 +14,22 @@ func (w *walkSpy) walked(s string) {
 }
 
 func TestWalk(t *testing.T) {
-	person := person{
+	x := struct {
+		firstName  string
+		age        int
+		occupation string
+	}{
 		firstName:  "Jeffrey",
-		lastName:   "Hershals",
 		age:        30,
 		occupation: "Engineer",
 	}
+
 	spy := walkSpy{make(map[string]interface{})}
 
-	Walk(person, spy.walked)
+	Walk(x, spy.walked)
 
 	want := map[string]interface{}{
 		"firstName":  nil,
-		"lastName":   nil,
 		"occupation": nil,
 	}
 
