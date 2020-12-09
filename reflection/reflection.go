@@ -14,6 +14,11 @@ func walk(x interface{}, fn func(input string)) {
 		for i := 0; i < val.Len(); i++ {
 			walk(val.Index(i).Interface(), fn)
 		}
+	case reflect.Array:
+		for i := 0; i < val.Len(); i++ {
+			walk(val.Index(i).Interface(), fn)
+		}
+
 	case reflect.String:
 		fn(val.String())
 	}
