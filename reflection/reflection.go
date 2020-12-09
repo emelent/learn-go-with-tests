@@ -10,11 +10,7 @@ func walk(x interface{}, fn func(input string)) {
 		for i := 0; i < val.NumField(); i++ {
 			walk(val.Field(i).Interface(), fn)
 		}
-	case reflect.Slice:
-		for i := 0; i < val.Len(); i++ {
-			walk(val.Index(i).Interface(), fn)
-		}
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		for i := 0; i < val.Len(); i++ {
 			walk(val.Index(i).Interface(), fn)
 		}
