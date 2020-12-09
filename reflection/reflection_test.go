@@ -16,7 +16,7 @@ type Profile struct {
 }
 
 func TestWalk(t *testing.T) {
-	t.Run("non-map cases", func(t *testing.T) {
+	t.Run("standard cases", func(t *testing.T) {
 		cases := []struct {
 			Name          string
 			Input         interface{}
@@ -114,6 +114,27 @@ func TestWalk(t *testing.T) {
 
 		assertContains(t, got, "Bar")
 		assertContains(t, got, "Boz")
+	})
+
+	t.Run("with channels", func(t *testing.T) {
+		aChannel := make(chan Profile)
+
+		go func() {
+			aChannel <- Profile{33, "Berlin"}
+			aChannel <- Profile{34, "Katowice"}
+			close(aChannel)
+		}()
+
+		var got []string
+		want := []string{"Berlin", "Katowice"}
+
+		walk(aChannel, func(input string) {
+			got = append(got, input)
+		})
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
 	})
 }
 

@@ -20,6 +20,10 @@ func walk(x interface{}, fn func(input string)) {
 		}
 	case reflect.String:
 		fn(val.String())
+	case reflect.Chan:
+		for v, ok := val.Recv(); ok; v, ok = val.Recv() {
+			walk(v.Interface(), fn)
+		}
 	}
 }
 
