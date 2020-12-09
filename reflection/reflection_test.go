@@ -1,39 +1,23 @@
 package reflection
 
 import (
-	"reflect"
 	"testing"
 )
 
-type walkSpy struct {
-	fields map[string]interface{}
-}
-
-func (w *walkSpy) walked(s string) {
-	w.fields[s] = nil
-}
-
 func TestWalk(t *testing.T) {
+
+	expected := "Chris"
+	var got []string
+
 	x := struct {
-		firstName  string
-		age        int
-		occupation string
-	}{
-		firstName:  "Jeffrey",
-		age:        30,
-		occupation: "Engineer",
-	}
+		Name string
+	}{expected}
 
-	spy := walkSpy{make(map[string]interface{})}
+	walk(x, func(input string) {
+		got = append(got, input)
+	})
 
-	Walk(x, spy.walked)
-
-	want := map[string]interface{}{
-		"firstName":  nil,
-		"occupation": nil,
-	}
-
-	if !reflect.DeepEqual(want, spy.fields) {
-		t.Errorf("wanted calls %v got %v", want, spy.fields)
+	if len(got) != 1 {
+		t.Errorf("wrong number of function calls, got %d want %d", len(got), 1)
 	}
 }
