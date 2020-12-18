@@ -2,16 +2,22 @@ package numeral
 
 import "strings"
 
-func ConvertToRoman(num int) string {
+func ConvertToRoman(arabic int) string {
 
 	var result strings.Builder
 
-	if num == 4 {
-		return "IV"
-	}
-
-	for i := 0; i < num; i++ {
-		result.WriteString("I")
+	for arabic > 0 {
+		switch {
+		case arabic > 4:
+			result.WriteString("V")
+			arabic -= 5
+		case arabic > 3:
+			result.WriteString("IV")
+			arabic -= 4
+		default:
+			result.WriteString("I")
+			arabic--
+		}
 	}
 
 	return result.String()
