@@ -2,14 +2,14 @@ package numeral
 
 import "strings"
 
-type RomanNumeral struct {
+type romanNumeral struct {
 	Value  int
 	Symbol string
 }
 
-type RomanNumerals []RomanNumeral
+type romanNumerals []romanNumeral
 
-func (r RomanNumerals) ValueOf(symbols ...byte) int {
+func (r romanNumerals) ValueOf(symbols ...byte) int {
 	symbol := string(symbols)
 	for _, s := range r {
 		if s.Symbol == symbol {
@@ -20,7 +20,17 @@ func (r RomanNumerals) ValueOf(symbols ...byte) int {
 	return 0
 }
 
-var allRomanNumerals = RomanNumerals([]RomanNumeral{
+func (r romanNumerals) Exists(symbols ...byte) bool {
+	symbol := string(symbols)
+	for _, s := range r {
+		if s.Symbol == symbol {
+			return true
+		}
+	}
+	return false
+}
+
+var allRomanNumerals = romanNumerals([]romanNumeral{
 	{1000, "M"},
 	{900, "CM"},
 	{500, "D"},
@@ -36,6 +46,23 @@ var allRomanNumerals = RomanNumerals([]RomanNumeral{
 	{1, "I"},
 })
 
+type windowedRoman string
+
+func (w windowedRoman) Symbols() (symbols [][]byte) {
+	for i := 0; i < len(w); i++ {
+		symbol := w[i]
+		notAtEnd := i+1 < len(w)
+
+		if notAtEnd && isSubtractiveSymbol(symbol) && allRomanNumerals.Exists(symbol, w[i+1]) {
+			symbols = append(symbols, []byte{symbol, w[i+1]})
+			i++
+		} else {
+			symbols = append(symbols, []byte{symbol})
+		}
+	}
+	return
+}
+
 func ConvertToRoman(arabic int) string {
 	var result strings.Builder
 
@@ -49,32 +76,14 @@ func ConvertToRoman(arabic int) string {
 	return result.String()
 }
 
-func ConvertToArabic(roman string) int {
-	total := 0
-
-	for i := 0; i < len(roman); i++ {
-		symbol := roman[i]
-
-		// look ahead to next  symbol if we can and, the current symbol is base 10(only valid subtractors)
-		if couldBeSubtractive(i, symbol, roman) {
-			// get the value of the two character string
-			value := allRomanNumerals.ValueOf(symbol, roman[i+1])
-
-			if value != 0 {
-				total += value
-				i++ // move past this character too for the next loop
-			} else {
-				total += allRomanNumerals.ValueOf(symbol)
-			}
-		} else {
-			total += allRomanNumerals.ValueOf(symbol)
-		}
+func ConvertToArabic(roman string) (total int) {
+	for _, symbols := range windowedRoman(roman).Symbols() {
+		total += allRomanNumerals.ValueOf(symbols...)
 	}
 
-	return total
+	return
 }
 
-func couldBeSubtractive(index int, currentSymbol uint8, roman string) bool {
-	isSubtractiveSymbol := currentSymbol == 'I' || currentSymbol == 'X' || currentSymbol == 'C'
-	return index+1 < len(roman) && isSubtractiveSymbol
+func isSubtractiveSymbol(symbol uint8) bool {
+	return symbol == 'I' || symbol == 'X' || symbol == 'C'
 }
