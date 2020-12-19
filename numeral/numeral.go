@@ -68,7 +68,7 @@ func ConvertToArabic(roman string) int {
 				total += value
 				i++ // move past this character too for the next loop
 			} else {
-				total++
+				total++ // this is fishy...
 			}
 		} else {
 			total++
