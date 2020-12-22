@@ -9,6 +9,7 @@ import (
 
 type PlayerStore interface {
 	GetPlayerScore(name string) int
+	RecordWin(name string)
 }
 
 type PlayerServer struct {
@@ -16,6 +17,7 @@ type PlayerServer struct {
 }
 
 func (p *PlayerServer) processWin(w http.ResponseWriter) {
+	p.store.RecordWin("")
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -44,6 +46,9 @@ type InMemoryPlayerStore struct{}
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 	return 123
+}
+
+func (i *InMemoryPlayerStore) RecordWin(name string) {
 }
 
 func main() {
