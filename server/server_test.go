@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -91,15 +93,24 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	server := PlayerServer{store}
 	player := "Pepper"
 
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	wg := sync.WaitGroup{}
+	scoreCount := 23
+	wg.Add(scoreCount)
+
+	for i := 0; i < scoreCount; i++ {
+		go func() {
+			server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 
 	response := httptest.NewRecorder()
 	server.ServeHTTP(response, newGetScoreRequest(player))
 
 	assertStatus(t, response.Code, http.StatusOK)
-	assertResponseBody(t, response.Body.String(), "3")
+	assertResponseBody(t, response.Body.String(), strconv.Itoa(scoreCount))
 }
 
 func newGetScoreRequest(name string) *http.Request {
