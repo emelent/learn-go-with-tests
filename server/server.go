@@ -42,17 +42,24 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type InMemoryPlayerStore struct{}
+func NewInMemoryPlayerStore() *InMemoryPlayerStore {
+	return &InMemoryPlayerStore{map[string]int{}}
+}
+
+type InMemoryPlayerStore struct {
+	store map[string]int
+}
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return 123
+	return i.store[name]
 }
 
 func (i *InMemoryPlayerStore) RecordWin(name string) {
+	i.store[name]++
 }
 
 func main() {
-	handler := &PlayerServer{&InMemoryPlayerStore{}}
+	handler := &PlayerServer{NewInMemoryPlayerStore()}
 	log.Printf("Serving on 0.0.0.0:5000\n\n")
 	log.Fatal(http.ListenAndServe(":5000", handler))
 }
