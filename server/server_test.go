@@ -94,7 +94,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	player := "Pepper"
 
 	wg := sync.WaitGroup{}
-	scoreCount := 23
+	scoreCount := 1024
 	wg.Add(scoreCount)
 
 	for i := 0; i < scoreCount; i++ {
