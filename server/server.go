@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 type PlayerStore interface {
@@ -43,11 +44,12 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}}
+	return &InMemoryPlayerStore{map[string]int{}, sync.Mutex{}}
 }
 
 type InMemoryPlayerStore struct {
 	store map[string]int
+	mx    sync.Mutex
 }
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
@@ -55,7 +57,9 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 }
 
 func (i *InMemoryPlayerStore) RecordWin(name string) {
+	i.mx.Lock()
 	i.store[name]++
+	i.mx.Unlock()
 }
 
 func main() {
