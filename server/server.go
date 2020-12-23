@@ -13,7 +13,21 @@ type PlayerStore interface {
 }
 
 type PlayerServer struct {
-	store PlayerStore
+	store  PlayerStore
+	router *http.ServeMux
+}
+
+func NewPlayerServer(store PlayerStore) *PlayerServer {
+	p := &PlayerServer{
+		store,
+		http.NewServeMux(),
+	}
+
+	p.router.Handle("/league", http.HandlerFunc(p.leagueHandler))
+	p.router.Handle("/players/", http.HandlerFunc(p.playersHandler))
+
+	return p
+
 }
 
 func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
@@ -47,13 +61,8 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	router := http.NewServeMux()
 
-	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
-
-	router.Handle("/players/", http.HandlerFunc(p.playersHandler))
-
-	router.ServeHTTP(w, r)
+	p.router.ServeHTTP(w, r)
 }
 
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
@@ -76,7 +85,7 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {
 }
 
 func main() {
-	handler := &PlayerServer{NewInMemoryPlayerStore()}
+	handler := NewPlayerServer(NewInMemoryPlayerStore())
 	log.Printf("Serving on 0.0.0.0:5000\n\n")
 	log.Fatal(http.ListenAndServe(":5000", handler))
 }
