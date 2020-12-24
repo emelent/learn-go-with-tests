@@ -35,14 +35,17 @@ type PlayerStore interface {
 type FileSystemPlayerStore struct {
 	database io.ReadWriteSeeker
 	mutex    sync.Mutex
+	league   League
 }
 
 func NewFileSystemPlayerStore(db io.ReadWriteSeeker) *FileSystemPlayerStore {
-	return &FileSystemPlayerStore{db, sync.Mutex{}}
+	_, _ = db.Seek(0, io.SeekStart)
+	league, _ := NewLeague(db)
+	return &FileSystemPlayerStore{db, sync.Mutex{}, league}
 }
 
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
-	if player := f.GetLeague().Find(name); player != nil {
+	if player := f.league.Find(name); player != nil {
 		return player.Wins
 	}
 
@@ -51,22 +54,19 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 
 func (f *FileSystemPlayerStore) RecordWin(name string) {
 	f.mutex.Lock()
-	league := f.GetLeague()
-	if player := league.Find(name); player != nil {
+	if player := f.league.Find(name); player != nil {
 		player.Wins++
 	} else {
-		league = append(league, Player{name, 1})
+		f.league = append(f.league, Player{name, 1})
 	}
 
 	_, _ = f.database.Seek(0, 0)
-	_ = json.NewEncoder(f.database).Encode(league)
+	_ = json.NewEncoder(f.database).Encode(f.league)
 	f.mutex.Unlock()
 }
 
 func (f *FileSystemPlayerStore) GetLeague() League {
-	_, _ = f.database.Seek(0, io.SeekStart)
-	league, _ := NewLeague(f.database)
-	return league
+	return f.league
 }
 
 type PlayerServer struct {

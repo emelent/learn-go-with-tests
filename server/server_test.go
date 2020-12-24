@@ -175,7 +175,7 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := FileSystemPlayerStore{database, sync.Mutex{}}
+		store := NewFileSystemPlayerStore(database)
 
 		want := League{
 			{"Cleo", 10},
