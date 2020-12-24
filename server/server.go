@@ -10,6 +10,15 @@ import (
 	"sync"
 )
 
+type tape struct {
+	file io.ReadWriteSeeker
+}
+
+func (t *tape) Write(p []byte) (n int, err error) {
+	_, _ = t.file.Seek(0, 0)
+	return t.file.Write(p)
+}
+
 type League []Player
 
 func (l League) Find(name string) *Player {
@@ -33,7 +42,7 @@ type PlayerStore interface {
 }
 
 type FileSystemPlayerStore struct {
-	database io.ReadWriteSeeker
+	database io.Writer
 	mutex    sync.Mutex
 	league   League
 }
@@ -41,7 +50,12 @@ type FileSystemPlayerStore struct {
 func NewFileSystemPlayerStore(db io.ReadWriteSeeker) *FileSystemPlayerStore {
 	_, _ = db.Seek(0, io.SeekStart)
 	league, _ := NewLeague(db)
-	return &FileSystemPlayerStore{db, sync.Mutex{}, league}
+
+	return &FileSystemPlayerStore{
+		database: &tape{db},
+		mutex:    sync.Mutex{},
+		league:   league,
+	}
 }
 
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
@@ -60,7 +74,6 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 		f.league = append(f.league, Player{name, 1})
 	}
 
-	_, _ = f.database.Seek(0, 0)
 	_ = json.NewEncoder(f.database).Encode(f.league)
 	f.mutex.Unlock()
 }
