@@ -163,7 +163,7 @@ func TestLeague(t *testing.T) {
 }
 
 func TestFileSystemStore(t *testing.T) {
-	t.Run("/league  from a reader", func(t *testing.T) {
+	t.Run("get league from a reader", func(t *testing.T) {
 		database := strings.NewReader(`[
 			{"Name": "Cleo", "Wins": 10},
 			{"Name": "Chris", "Wins": 33}
@@ -179,6 +179,22 @@ func TestFileSystemStore(t *testing.T) {
 		assertLeague(t, store.GetLeague(), want)
 
 		assertLeague(t, store.GetLeague(), want)
+	})
+
+	t.Run("get playerscore from a reader", func(t *testing.T) {
+		database := strings.NewReader(`[
+			{"Name": "Cleo", "Wins": 10},
+			{"Name": "Chris", "Wins": 33}
+		]`)
+
+		store := FileSystemPlayerStore{database}
+
+		got := store.GetPlayerScore("Chris")
+		want := 33
+
+		if got != want {
+			t.Errorf("got %d want %d", got, want)
+		}
 	})
 }
 
