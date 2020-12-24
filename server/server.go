@@ -48,16 +48,26 @@ type FileSystemPlayerStore struct {
 	league   League
 }
 
-func NewFileSystemPlayerStore(db *os.File) (*FileSystemPlayerStore, error) {
-	_, _ = db.Seek(0, io.SeekStart)
-	league, err := NewLeague(db)
+func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
+	info, err := file.Stat()
 
 	if err != nil {
-		return nil, fmt.Errorf("problem loading player store from file %s, %v", db.Name(), err)
+		return nil, fmt.Errorf("problem getting file info from file %s, %v", file.Name(), err)
+	}
+
+	if info.Size() == 0 {
+		_, _ = file.Write([]byte("[]"))
+	}
+
+	_, _ = file.Seek(0, io.SeekStart)
+	league, err := NewLeague(file)
+
+	if err != nil {
+		return nil, fmt.Errorf("problem loading player store from file %s, %v", file.Name(), err)
 	}
 
 	return &FileSystemPlayerStore{
-		database: json.NewEncoder(&tape{db}),
+		database: json.NewEncoder(&tape{file}),
 		mutex:    sync.Mutex{},
 		league:   league,
 	}, nil
