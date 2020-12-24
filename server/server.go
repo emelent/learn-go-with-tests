@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -16,6 +17,23 @@ type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
 	GetLeague() []Player
+}
+
+type FileSystemPlayerStore struct {
+	database io.Reader
+}
+
+func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
+	return 0
+}
+
+func (f *FileSystemPlayerStore) RecordWin(name string) {
+}
+
+func (f *FileSystemPlayerStore) GetLeague() []Player {
+	var league []Player
+	_ = json.NewDecoder(f.database).Decode(&league)
+	return league
 }
 
 type PlayerServer struct {
