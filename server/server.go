@@ -43,7 +43,7 @@ type PlayerStore interface {
 }
 
 type FileSystemPlayerStore struct {
-	database io.Writer
+	database *json.Encoder
 	mutex    sync.Mutex
 	league   League
 }
@@ -53,7 +53,7 @@ func NewFileSystemPlayerStore(db *os.File) *FileSystemPlayerStore {
 	league, _ := NewLeague(db)
 
 	return &FileSystemPlayerStore{
-		database: &tape{db},
+		database: json.NewEncoder(&tape{db}),
 		mutex:    sync.Mutex{},
 		league:   league,
 	}
@@ -77,7 +77,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 		f.league = append(f.league, Player{name, 1})
 	}
 
-	_ = json.NewEncoder(f.database).Encode(f.league)
+	_ = f.database.Encode(f.league)
 
 	f.mutex.Unlock()
 }
