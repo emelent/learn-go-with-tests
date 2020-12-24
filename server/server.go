@@ -31,8 +31,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 }
 
 func (f *FileSystemPlayerStore) GetLeague() []Player {
-	var league []Player
-	_ = json.NewDecoder(f.database).Decode(&league)
+	league, _ := NewLeague(f.database)
 	return league
 }
 
@@ -113,6 +112,16 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.mx.Lock()
 	i.store[name]++
 	i.mx.Unlock()
+}
+
+func NewLeague(rdr io.Reader) ([]Player, error) {
+	var league []Player
+	err := json.NewDecoder(rdr).Decode(&league)
+	if err != nil {
+		err = fmt.Errorf("problem parsing league, %v", err)
+	}
+
+	return league, err
 }
 
 func main() {
