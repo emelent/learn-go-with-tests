@@ -191,11 +191,16 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetPlayerScore("Chris")
 		want := 33
+		assertScoreEquals(t, got, want)
 
-		if got != want {
-			t.Errorf("got %d want %d", got, want)
-		}
 	})
+}
+
+func assertScoreEquals(t *testing.T, got, want int) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
+	}
 }
 
 func assertContentType(t *testing.T, response *httptest.ResponseRecorder, want string) {
