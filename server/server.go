@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 )
 
@@ -33,6 +34,7 @@ type PlayerStore interface {
 
 type FileSystemPlayerStore struct {
 	database io.ReadWriteSeeker
+	mutex    sync.Mutex
 }
 
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
@@ -44,6 +46,7 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 }
 
 func (f *FileSystemPlayerStore) RecordWin(name string) {
+	f.mutex.Lock()
 	league := f.GetLeague()
 	if player := league.Find(name); player != nil {
 		player.Wins++
@@ -53,6 +56,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 
 	_, _ = f.database.Seek(0, 0)
 	_ = json.NewEncoder(f.database).Encode(league)
+	f.mutex.Unlock()
 }
 
 func (f *FileSystemPlayerStore) GetLeague() League {
@@ -113,33 +117,6 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}, sync.Mutex{}}
-}
-
-type InMemoryPlayerStore struct {
-	store map[string]int
-	mx    sync.Mutex
-}
-
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return i.store[name]
-}
-
-func (i *InMemoryPlayerStore) GetLeague() League {
-	var league League
-	for name, wins := range i.store {
-		league = append(league, Player{name, wins})
-	}
-	return league
-}
-
-func (i *InMemoryPlayerStore) RecordWin(name string) {
-	i.mx.Lock()
-	i.store[name]++
-	i.mx.Unlock()
-}
-
 func NewLeague(rdr io.Reader) (League, error) {
 	var league League
 	err := json.NewDecoder(rdr).Decode(&league)
@@ -150,8 +127,17 @@ func NewLeague(rdr io.Reader) (League, error) {
 	return league, err
 }
 
+const dbFileName = "game.db.json"
+
 func main() {
-	handler := NewPlayerServer(NewInMemoryPlayerStore())
+	db, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+
+	if err != nil {
+		log.Fatalf("problem opening %s %v", dbFileName, err)
+	}
+
+	store := &FileSystemPlayerStore{db, sync.Mutex{}}
+	handler := NewPlayerServer(store)
 	log.Printf("Serving on 0.0.0.0:5000\n\n")
 	log.Fatal(http.ListenAndServe(":5000", handler))
 }
