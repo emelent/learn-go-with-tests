@@ -177,6 +177,8 @@ func TestFileSystemStore(t *testing.T) {
 		}
 
 		assertLeague(t, store.GetLeague(), want)
+
+		assertLeague(t, store.GetLeague(), want)
 	})
 }
 
