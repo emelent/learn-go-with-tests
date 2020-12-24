@@ -69,6 +69,8 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 
 func (f *FileSystemPlayerStore) RecordWin(name string) {
 	f.mutex.Lock()
+
+	// critical section
 	if player := f.league.Find(name); player != nil {
 		player.Wins++
 	} else {
@@ -76,6 +78,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 	}
 
 	_ = json.NewEncoder(f.database).Encode(f.league)
+
 	f.mutex.Unlock()
 }
 
