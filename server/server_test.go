@@ -233,6 +233,25 @@ func TestFileSystemStore(t *testing.T) {
 	})
 }
 
+func TestTape_Write(t *testing.T) {
+	file, clean := createTempFile(t, "12345")
+	defer clean()
+
+	tape := &tape{file}
+
+	_, _ = tape.Write([]byte("abc"))
+
+	_, _ = file.Seek(0, io.SeekStart)
+	newFileContents, _ := ioutil.ReadAll(file)
+
+	got := string(newFileContents)
+	want := "abc"
+
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+
 func assertScoreEquals(t *testing.T, got, want int) {
 	t.Helper()
 	if got != want {
@@ -294,7 +313,7 @@ func assertStatus(t *testing.T, got, want int) {
 	}
 }
 
-func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
+func createTempFile(t *testing.T, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tmpfile, err := ioutil.TempFile("", "db")
