@@ -9,6 +9,18 @@ import (
 	"sync"
 )
 
+type League []Player
+
+func (l League) Find(name string) *Player {
+	for i, p := range l {
+		if p.Name == name {
+			return &l[i]
+		}
+	}
+
+	return nil
+}
+
 type Player struct {
 	Name string
 	Wins int
@@ -16,7 +28,7 @@ type Player struct {
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
-	GetLeague() []Player
+	GetLeague() League
 }
 
 type FileSystemPlayerStore struct {
@@ -24,32 +36,24 @@ type FileSystemPlayerStore struct {
 }
 
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
-	var wins int
-
-	for _, player := range f.GetLeague() {
-		if player.Name == name {
-			wins = player.Wins
-			break
-		}
+	if player := f.GetLeague().Find(name); player != nil {
+		return player.Wins
 	}
 
-	return wins
+	return 0
 }
 
 func (f *FileSystemPlayerStore) RecordWin(name string) {
 	league := f.GetLeague()
-
-	for i, player := range league {
-		if player.Name == name {
-			league[i].Wins++
-		}
+	if player := league.Find(name); player != nil {
+		player.Wins++
 	}
 
 	_, _ = f.database.Seek(0, 0)
 	_ = json.NewEncoder(f.database).Encode(league)
 }
 
-func (f *FileSystemPlayerStore) GetLeague() []Player {
+func (f *FileSystemPlayerStore) GetLeague() League {
 	_, _ = f.database.Seek(0, io.SeekStart)
 	league, _ := NewLeague(f.database)
 	return league
@@ -120,8 +124,8 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 	return i.store[name]
 }
 
-func (i *InMemoryPlayerStore) GetLeague() []Player {
-	var league []Player
+func (i *InMemoryPlayerStore) GetLeague() League {
+	var league League
 	for name, wins := range i.store {
 		league = append(league, Player{name, wins})
 	}
@@ -134,8 +138,8 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.mx.Unlock()
 }
 
-func NewLeague(rdr io.Reader) ([]Player, error) {
-	var league []Player
+func NewLeague(rdr io.Reader) (League, error) {
+	var league League
 	err := json.NewDecoder(rdr).Decode(&league)
 	if err != nil {
 		err = fmt.Errorf("problem parsing league, %v", err)
