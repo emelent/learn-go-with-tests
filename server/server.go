@@ -37,6 +37,10 @@ type FileSystemPlayerStore struct {
 	mutex    sync.Mutex
 }
 
+func NewFileSystemPlayerStore(db io.ReadWriteSeeker) *FileSystemPlayerStore {
+	return &FileSystemPlayerStore{db, sync.Mutex{}}
+}
+
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 	if player := f.GetLeague().Find(name); player != nil {
 		return player.Wins
@@ -136,7 +140,7 @@ func main() {
 		log.Fatalf("problem opening %s %v", dbFileName, err)
 	}
 
-	store := &FileSystemPlayerStore{db, sync.Mutex{}}
+	store := NewFileSystemPlayerStore(db)
 	handler := NewPlayerServer(store)
 	log.Printf("Serving on 0.0.0.0:5000\n\n")
 	log.Fatal(http.ListenAndServe(":5000", handler))

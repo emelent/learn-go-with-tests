@@ -103,7 +103,9 @@ func TestStoreWins(t *testing.T) {
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	database, cleanDatabase := createTempFile(t, "")
 	defer cleanDatabase()
-	store := &FileSystemPlayerStore{database, sync.Mutex{}}
+
+	store := NewFileSystemPlayerStore(database)
+
 	server := NewPlayerServer(store)
 	player := "Pepper"
 
@@ -191,7 +193,8 @@ func TestFileSystemStore(t *testing.T) {
 			{"Name": "Chris", "Wins": 33}
 		]`)
 		defer cleanDatabase()
-		store := FileSystemPlayerStore{database, sync.Mutex{}}
+
+		store := NewFileSystemPlayerStore(database)
 
 		got := store.GetPlayerScore("Chris")
 		want := 33
@@ -205,8 +208,7 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := FileSystemPlayerStore{database, sync.Mutex{}}
-
+		store := NewFileSystemPlayerStore(database)
 		store.RecordWin("Chris")
 
 		got := store.GetPlayerScore("Chris")
@@ -221,7 +223,7 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := FileSystemPlayerStore{database, sync.Mutex{}}
+		store := NewFileSystemPlayerStore(database)
 
 		store.RecordWin("Pepper")
 
