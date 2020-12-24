@@ -20,7 +20,7 @@ type PlayerStore interface {
 }
 
 type FileSystemPlayerStore struct {
-	database io.ReadSeeker
+	database io.ReadWriteSeeker
 }
 
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {

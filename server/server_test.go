@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 )
@@ -164,10 +165,11 @@ func TestLeague(t *testing.T) {
 
 func TestFileSystemStore(t *testing.T) {
 	t.Run("get league from a reader", func(t *testing.T) {
-		database := strings.NewReader(`[
+		database, cleanDatabase := createTempFile(t, `[
 			{"Name": "Cleo", "Wins": 10},
 			{"Name": "Chris", "Wins": 33}
 		]`)
+		defer cleanDatabase()
 
 		store := FileSystemPlayerStore{database}
 
@@ -182,17 +184,16 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("get playerscore from a reader", func(t *testing.T) {
-		database := strings.NewReader(`[
+		database, cleanDatabase := createTempFile(t, `[
 			{"Name": "Cleo", "Wins": 10},
 			{"Name": "Chris", "Wins": 33}
 		]`)
-
+		defer cleanDatabase()
 		store := FileSystemPlayerStore{database}
 
 		got := store.GetPlayerScore("Chris")
 		want := 33
 		assertScoreEquals(t, got, want)
-
 	})
 }
 
@@ -255,4 +256,23 @@ func assertStatus(t *testing.T, got, want int) {
 	if got != want {
 		t.Errorf("did not get correct status, got %d, want %d", got, want)
 	}
+}
+
+func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
+	t.Helper()
+
+	tmpfile, err := ioutil.TempFile("", "db")
+
+	if err != nil {
+		t.Fatalf("could not createtemp file %v", err)
+	}
+
+	_, _ = tmpfile.Write([]byte(initialData))
+
+	removeFile := func() {
+		tmpfile.Close()
+		os.Remove(tmpfile.Name())
+	}
+
+	return tmpfile, removeFile
 }
